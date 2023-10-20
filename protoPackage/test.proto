@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package protoPackage;
+
+// Import Path for buf to generate stubs
+option go_package = "./protoPackage";
+
+import  "google/api/annotations.proto";
+import  "google/api/http.proto";
+
+service UserService {
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
+    option (google.api.http) = {
+      post: "/v1/createuser"
+      body: "User"
+    };
+  }
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {
+    option (google.api.http) = {
+      get: "/v1/getuser/{name}"
+    };
+  }
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
+    option (google.api.http) = {
+      patch: "/v1/updateuser/{name}"
+      body: "user"
+    };
+  }
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {
+    option (google.api.http).delete = "/v1/deleteuser/{name}";
+  }
+}
+
+message User {
+  // Name of the user
+  string name = 1;
+
+  // The age of the user.
+  int32 age = 2;
+
+  // The gender of the user.
+  string gender = 3;
+
+  // The mobile number of the user.
+  int32 mobile_number = 4;
+
+  // Email of user.
+  string email_id = 5;
+}
+
+message CreateUserRequest {
+  // User details
+  User user = 1;
+}
+
+message CreateUserResponse {
+  // User details
+  User user = 1;
+}
+
+message GetUserRequest {
+  // User name
+  string name = 1;
+}
+
+message GetUserResponse {
+  // User details
+  User user = 1;
+}
+
+message UpdateUserRequest {
+  string name = 1;
+  User user = 2;
+}
+
+message UpdateUserResponse {
+  // User details
+  User user = 1;
+}
+
+message DeleteUserRequest {
+  // User name
+  string name = 1;
+}
+
+message DeleteUserResponse {
+  // Status of deletion
+  string status = 1;
+}
+
