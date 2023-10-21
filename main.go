@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"go.mongodb.org/mongo-driver/bson"
@@ -44,37 +45,51 @@ func (s *ServerDB) CreateUser(ctx context.Context, request *protoPackage.CreateU
 
 func (s *ServerDB) GetUser(ctx context.Context, request *protoPackage.GetUserRequest) (*protoPackage.GetUserResponse, error) {
 
-	var userInfo *MongoSchema.UserData
 	value := request.GetName()
 	fmt.Println("Received through url", value)
-	res, err := s.getContact(ctx, value)
-	if err = res.(*mongo.SingleResult).Decode(&userInfo); err != nil {
-		return nil, err
-	}
-	resp := userInfo.ConvertToProto()
-	return &protoPackage.GetUserResponse{User: resp}, nil
+	res, _ := s.getContact(ctx, value)
+	return &protoPackage.GetUserResponse{User: res}, nil
 
 }
 
-func (s *ServerDB) getContact(ctx context.Context, value string) (SingleResult, error) {
+func (s *ServerDB) getContact(ctx context.Context, value string) (*protoPackage.User, error) {
 	x := s.store
 	collection := x.Database("admin111").Collection("Users")
-	//bson.M{"name": userName}
 	sinResult := collection.FindOne(ctx, bson.M{"name": value})
-	if sinResult.Err() != nil {
-		fmt.Println(sinResult.Err())
+	var userInfo *MongoSchema.UserData
+	if err := SingleResult(sinResult).(*mongo.SingleResult).Decode(&userInfo); err != nil {
+		return nil, err
 	}
-	return sinResult, nil
+	resp := userInfo.ConvertToProto()
+	return resp, nil
 }
 
 func (s *ServerDB) UpdateUser(ctx context.Context, request *protoPackage.UpdateUserRequest) (*protoPackage.UpdateUserResponse, error) {
 	//TODO implement me
-	panic("implement me")
+	//panic("implement me")
+	var updateParams map[string]interface{}
+	userInfo, _ := json.Marshal(request.GetUser())
+	json.Unmarshal(userInfo, &updateParams)
+	fmt.Println("updateParams: ", updateParams)
+	fmt.Println("userInfo", userInfo)
+	collection := s.store.Database("admin111").Collection("Users")
+	_, err := collection.UpdateOne(ctx, bson.M{"name": request.GetName()}, bson.M{"$set": updateParams})
+	if err != nil {
+		fmt.Println(err)
+	}
+	updatedUser, err := s.getContact(ctx, request.GetUser().Name)
+	return &protoPackage.UpdateUserResponse{User: updatedUser}, nil
 }
 
 func (s *ServerDB) DeleteUser(ctx context.Context, request *protoPackage.DeleteUserRequest) (*protoPackage.DeleteUserResponse, error) {
 	//TODO implement me
-	panic("implement me")
+	//panic("implement me")
+	collection := s.store.Database("admin111").Collection("Users")
+	_, err := collection.DeleteOne(ctx, bson.M{"name": request.GetName()})
+	if err != nil {
+		fmt.Println(err)
+	}
+	return &protoPackage.DeleteUserResponse{Status: "Deleted record successfully"}, nil
 }
 
 func main() {
