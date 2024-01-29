@@ -78,7 +78,7 @@ func (s *ServerDB) DeleteUser(ctx context.Context, request *protoPackage.DeleteU
 }
 
 func main() {
-	mongoURI := "mongodb+srv://saanjeev:go9z2wF62WKuDrcD@cluster0.iqret.mongodb.net/"
+	mongoURI := ""
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
